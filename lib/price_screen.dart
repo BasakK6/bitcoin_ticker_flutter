@@ -13,6 +13,8 @@ class PriceScreen extends StatefulWidget {
 class _PriceScreenState extends State<PriceScreen> {
   String selectedCurrency = "AUD";
   String coinVsCurrencyRate = "?";
+  Map<String, String> cryptoRates = {};
+  bool isLoading = false;
 
   DropdownButton<String> getAndroidDropdown() {
     return DropdownButton<String>(
@@ -51,14 +53,23 @@ class _PriceScreenState extends State<PriceScreen> {
     getCoinRate();
   }
 
+  void updateLoadingStatus() {
+    setState(() {
+      isLoading = !isLoading;
+    });
+  }
+
   void getCoinRate() async {
     try {
-      double rate = await CoinData().getCoinData(currencyType: selectedCurrency);
+      updateLoadingStatus();
+      var data = await CoinData().getCoinData(currencyType: selectedCurrency);
       setState(() {
-        coinVsCurrencyRate = rate.toStringAsFixed(2);
+        cryptoRates = data;
       });
     } catch (e) {
       print(e);
+    } finally {
+      updateLoadingStatus();
     }
   }
 
@@ -72,27 +83,18 @@ class _PriceScreenState extends State<PriceScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
-            child: Card(
-              color: Colors.lightBlueAccent,
-              elevation: 5.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 15.0, horizontal: 28.0),
-                child: Text(
-                  '1 BTC = $coinVsCurrencyRate $selectedCurrency',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: cryptoList
+                .map(
+                  (e) => CryptoCard(
+                    cryptoType: e,
+                    coinVsCurrencyRate:
+                        isLoading ? "?" : (cryptoRates[e] ?? "?"),
+                    selectedCurrency: selectedCurrency,
                   ),
-                ),
-              ),
-            ),
+                )
+                .toList(),
           ),
           Container(
             height: 150.0,
@@ -102,6 +104,44 @@ class _PriceScreenState extends State<PriceScreen> {
             child: Platform.isIOS ? getIOSPicker() : getAndroidDropdown(),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class CryptoCard extends StatelessWidget {
+  const CryptoCard({
+    super.key,
+    required this.coinVsCurrencyRate,
+    required this.selectedCurrency,
+    required this.cryptoType,
+  });
+
+  final String cryptoType;
+  final String coinVsCurrencyRate;
+  final String selectedCurrency;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
+      child: Card(
+        color: Colors.lightBlueAccent,
+        elevation: 5.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
+          child: Text(
+            '1 $cryptoType = $coinVsCurrencyRate $selectedCurrency',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 20.0,
+              color: Colors.white,
+            ),
+          ),
+        ),
       ),
     );
   }
