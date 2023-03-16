@@ -37,9 +37,8 @@ const String apiUrl = "https://rest.coinapi.io/v1/exchangerate";
 
 class CoinData {
   String coinType = "BTC";
-  String currencyType = "USD";
 
-  Future<double> getCoinData() async {
+  Future<double> getCoinData({required String currencyType}) async {
     String url = "$apiUrl/$coinType/$currencyType?apiKey=$apiKey";
     http.Response response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
@@ -51,5 +50,5 @@ class CoinData {
       print(response.statusCode);
       throw 'Problem with the get request';
     }
-  }
+   }
 }
