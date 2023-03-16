@@ -12,8 +12,9 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
   String selectedCurrency = "USD";
+  String coinVsCurrencyRate = "?";
 
-  DropdownButton<String> getAndroidDropdown(){
+  DropdownButton<String> getAndroidDropdown() {
     return DropdownButton<String>(
       value: selectedCurrency,
       onChanged: (value) {
@@ -24,19 +25,36 @@ class _PriceScreenState extends State<PriceScreen> {
       },
       items: currenciesList
           .map((e) => DropdownMenuItem<String>(
-        value: e,
-        child: Text(e),
-      ))
+                value: e,
+                child: Text(e),
+              ))
           .toList(),
     );
   }
 
-  CupertinoPicker getIOSPicker(){
+  CupertinoPicker getIOSPicker() {
     return CupertinoPicker(
       itemExtent: 32,
       onSelectedItemChanged: (int selectedIndex) {},
       children: currenciesList.map((e) => Text(e)).toList(),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getCoinRate();
+  }
+
+  void getCoinRate() async {
+    try {
+      double rate = await CoinData().getCoinData();
+      setState(() {
+        coinVsCurrencyRate = rate.toStringAsFixed(2);
+      });
+    } catch (e) {
+      print(e);
+    }
   }
 
   @override
@@ -57,12 +75,13 @@ class _PriceScreenState extends State<PriceScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(10.0),
               ),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 15.0, horizontal: 28.0),
                 child: Text(
-                  '1 BTC = ? USD',
+                  '1 BTC = $coinVsCurrencyRate USD',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 20.0,
                     color: Colors.white,
                   ),
